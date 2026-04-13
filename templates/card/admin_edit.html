@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Edit My Card</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:#0d0d1a; font-family:'Poppins',sans-serif; color:#eee; min-height:100vh; }
+
+    /* top bar */
+    .topbar {
+      background:#161625;
+      border-bottom:1px solid rgba(255,255,255,0.06);
+      padding:14px 20px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      position:sticky;
+      top:0;
+      z-index:99;
+    }
+    .topbar-title { font-size:15px; font-weight:600; }
+    .topbar-right { display:flex; align-items:center; gap:12px; }
+    .saved-msg { font-size:13px; color:#3ecf8e; }
+    .preview-btn {
+      font-size:13px; color:#6c63ff; text-decoration:none;
+      padding:6px 12px; border:1px solid rgba(108,99,255,0.3);
+      border-radius:8px; transition:background 0.2s;
+    }
+    .preview-btn:hover { background:rgba(108,99,255,0.1); }
+    .logout-btn {
+      font-size:13px; color:#666; background:none;
+      border:1px solid rgba(255,255,255,0.08); border-radius:8px;
+      padding:6px 12px; cursor:pointer; font-family:'Poppins',sans-serif;
+    }
+    .logout-btn:hover { color:#eee; }
+
+    /* tabs */
+    .tabs {
+      display:flex; gap:4px; padding:10px 16px;
+      background:#1c1c30; border-bottom:1px solid rgba(255,255,255,0.05);
+      overflow-x:auto;
+    }
+    .tab-btn {
+      font-size:13px; font-weight:500; padding:7px 16px;
+      border-radius:8px; border:none; background:none;
+      color:#555; cursor:pointer; font-family:'Poppins',sans-serif;
+      white-space:nowrap; transition:all 0.2s;
+    }
+    .tab-btn:hover { color:#eee; background:rgba(255,255,255,0.05); }
+    .tab-btn.active { background:rgba(108,99,255,0.15); color:#a09bff; }
+
+    /* content */
+    .content { padding:20px; max-width:540px; margin:0 auto; padding-bottom:60px; }
+
+    .tab-panel { display:none; }
+    .tab-panel.active { display:block; }
+
+    /* form */
+    .group { margin-bottom:16px; }
+    .group label {
+      display:block; font-size:11px; color:#555;
+      margin-bottom:7px; text-transform:uppercase; letter-spacing:0.9px; font-weight:500;
+    }
+    .group input[type=text],
+    .group input[type=email],
+    .group input[type=url],
+    .group input[type=password],
+    .group textarea {
+      width:100%; padding:10px 14px;
+      background:#1c1c30; border:1px solid rgba(255,255,255,0.07);
+      border-radius:10px; color:#eee; font-size:14px;
+      font-family:'Poppins',sans-serif; outline:none;
+      transition:border-color 0.2s;
+    }
+    .group input:focus, .group textarea:focus { border-color:#6c63ff; }
+    .group input::placeholder, .group textarea::placeholder { color:#333; }
+    .group textarea { resize:vertical; min-height:90px; line-height:1.6; }
+
+    .section-label {
+      font-size:11px; color:#444; text-transform:uppercase;
+      letter-spacing:1px; font-weight:600; margin:20px 0 12px;
+      padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.04);
+    }
+
+    .hint-text { font-size:11px; color:#444; margin-top:6px; }
+
+    /* photo row */
+    .photo-row { display:flex; align-items:center; gap:16px; margin-bottom:16px; }
+    .photo-preview {
+      width:80px; height:80px; border-radius:50%;
+      overflow:hidden; border:2px solid #6c63ff;
+      background:linear-gradient(135deg,#6c63ff,#3ecf8e);
+      display:flex; align-items:center; justify-content:center;
+      flex-shrink:0;
+    }
+    .photo-preview img { width:100%; height:100%; object-fit:cover; }
+    .photo-initials { font-size:24px; font-weight:600; color:white; }
+    .photo-actions { display:flex; flex-direction:column; gap:8px; }
+    .upload-label {
+      display:inline-block; padding:8px 16px;
+      background:rgba(108,99,255,0.12); border:1px solid rgba(108,99,255,0.3);
+      border-radius:8px; color:#a09bff; font-size:13px; cursor:pointer;
+    }
+    .upload-label:hover { background:rgba(108,99,255,0.2); }
+    .remove-photo-btn {
+      padding:7px 14px; background:none;
+      border:1px solid rgba(255,255,255,0.07); border-radius:8px;
+      color:#555; font-size:13px; cursor:pointer;
+      font-family:'Poppins',sans-serif; transition:all 0.2s;
+    }
+    .remove-photo-btn:hover { border-color:#e74c3c; color:#e74c3c; }
+
+    /* save button */
+    .save-btn {
+      padding:12px 30px;
+      background:linear-gradient(135deg,#6c63ff,#3ecf8e);
+      color:white; border:none; border-radius:10px;
+      font-size:14px; font-weight:600; cursor:pointer;
+      font-family:'Poppins',sans-serif; transition:opacity 0.2s;
+      margin-top:8px;
+    }
+    .save-btn:hover { opacity:0.85; }
+  </style>
+</head>
+<body>
+
+<!-- top bar -->
+<div class="topbar">
+  <span class="topbar-title">⚙ Edit My Card</span>
+  <div class="topbar-right">
+    {% if saved %}<span class="saved-msg">✓ Saved!</span>{% endif %}
+    <a href="{% url 'home' %}" target="_blank" class="preview-btn">👁 Preview</a>
+    <a href="{% url 'admin_logout' %}"><button class="logout-btn">Logout</button></a>
+  </div>
+</div>
+
+<!-- tabs -->
+<div class="tabs">
+  <button class="tab-btn {% if tab == 'profile' %}active{% endif %}" onclick="switchTab('profile',this)">Profile</button>
+  <button class="tab-btn {% if tab == 'contact' %}active{% endif %}" onclick="switchTab('contact',this)">Contact</button>
+  <button class="tab-btn {% if tab == 'social'  %}active{% endif %}" onclick="switchTab('social',this)">Social</button>
+  <button class="tab-btn {% if tab == 'skills'  %}active{% endif %}" onclick="switchTab('skills',this)">Skills</button>
+</div>
+
+<div class="content">
+<form method="POST" enctype="multipart/form-data">
+  {% csrf_token %}
+  <input type="hidden" name="active_tab" id="active_tab" value="{{ tab }}"/>
+
+  <!-- PROFILE TAB -->
+  <div id="panel-profile" class="tab-panel {% if tab == 'profile' %}active{% endif %}">
+
+    <div class="group" style="margin-bottom:20px;">
+      <label>Profile Photo</label>
+      <div class="photo-row">
+        <div class="photo-preview">
+          {% if profile.photo %}
+            <img src="{{ profile.photo.url }}" alt="photo"/>
+          {% else %}
+            <span class="photo-initials">{{ profile.get_initials }}</span>
+          {% endif %}
+        </div>
+        <div class="photo-actions">
+          <label class="upload-label">
+            Choose Photo
+            <input type="file" name="photo" accept="image/*" style="display:none;" onchange="previewPhoto(this)"/>
+          </label>
+          {% if profile.photo %}
+          <button type="submit" name="remove_photo" value="1" class="remove-photo-btn"
+            onclick="document.getElementById('active_tab').value='profile'">Remove Photo</button>
+          {% endif %}
+          <p class="hint-text">Keep under 2MB please</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="group">
+      <label>Full Name</label>
+      {{ form.name }}
+    </div>
+    <div class="group">
+      <label>Job Title</label>
+      {{ form.job_title }}
+    </div>
+    <div class="group">
+      <label>Location</label>
+      {{ form.location }}
+    </div>
+    <div class="group">
+      <label>About / Bio</label>
+      {{ form.about }}
+    </div>
+
+    <button type="submit" class="save-btn" onclick="document.getElementById('active_tab').value='profile'">
+      💾 Save Profile
+    </button>
+  </div>
+
+  <!-- CONTACT TAB -->
+  <div id="panel-contact" class="tab-panel {% if tab == 'contact' %}active{% endif %}">
+    <div class="group">
+      <label>📱 Phone Number</label>
+      {{ form.phone }}
+    </div>
+    <div class="group">
+      <label>📧 Email Address</label>
+      {{ form.email }}
+    </div>
+    <div class="group">
+      <label>🌐 Website / Portfolio</label>
+      {{ form.website }}
+    </div>
+    <button type="submit" class="save-btn" onclick="document.getElementById('active_tab').value='contact'">
+      💾 Save Contact
+    </button>
+  </div>
+
+  <!-- SOCIAL TAB -->
+  <div id="panel-social" class="tab-panel {% if tab == 'social' %}active{% endif %}">
+    <p class="section-label">💬 Messaging</p>
+    <div class="group">
+      <label>WhatsApp (digits only with country code)</label>
+      {{ form.whatsapp }}
+    </div>
+    <div class="group">
+      <label>Telegram Username</label>
+      {{ form.telegram }}
+    </div>
+    <div class="group">
+      <label>Viber Number</label>
+      {{ form.viber }}
+    </div>
+
+    <p class="section-label">📱 Social Networks</p>
+    <div class="group"><label>Facebook URL</label>{{ form.facebook }}</div>
+    <div class="group"><label>Instagram URL</label>{{ form.instagram }}</div>
+    <div class="group"><label>Twitter / X URL</label>{{ form.twitter }}</div>
+    <div class="group"><label>TikTok URL</label>{{ form.tiktok }}</div>
+    <div class="group"><label>YouTube URL</label>{{ form.youtube }}</div>
+    <div class="group"><label>Discord Username</label>{{ form.discord }}</div>
+
+    <p class="section-label">💼 Professional</p>
+    <div class="group"><label>LinkedIn URL</label>{{ form.linkedin }}</div>
+    <div class="group"><label>GitHub URL</label>{{ form.github }}</div>
+    <div class="group"><label>Behance URL</label>{{ form.behance }}</div>
+    <div class="group"><label>Dribbble URL</label>{{ form.dribbble }}</div>
+
+    <button type="submit" class="save-btn" onclick="document.getElementById('active_tab').value='social'">
+      💾 Save Social Links
+    </button>
+  </div>
+
+  <!-- SKILLS TAB -->
+  <div id="panel-skills" class="tab-panel {% if tab == 'skills' %}active{% endif %}">
+    <div class="group">
+      <label>Skills (separate with commas)</label>
+      {{ form.skills_text }}
+      <p class="hint-text">Example: Python, Django, HTML, CSS, JavaScript, Photoshop</p>
+    </div>
+    <button type="submit" class="save-btn" onclick="document.getElementById('active_tab').value='skills'">
+      💾 Save Skills
+    </button>
+  </div>
+
+</form>
+</div>
+
+<script>
+  function switchTab(name, btn) {
+    // hide all panels
+    document.querySelectorAll('.tab-panel').forEach(function(p) {
+      p.classList.remove('active');
+    });
+    // remove active from all tab buttons
+    document.querySelectorAll('.tab-btn').forEach(function(b) {
+      b.classList.remove('active');
+    });
+    // show selected panel
+    document.getElementById('panel-' + name).classList.add('active');
+    btn.classList.add('active');
+    document.getElementById('active_tab').value = name;
+  }
+
+  // preview photo before upload
+  function previewPhoto(input) {
+    if (!input.files[0]) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var preview = input.closest('.photo-row').querySelector('.photo-preview');
+      preview.innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover;"/>';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+</script>
+
+</body>
+</html>
